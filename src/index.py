@@ -1,8 +1,9 @@
 """ASGI entrypoint recognized automatically by Vercel."""
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
@@ -21,10 +22,22 @@ app = FastAPI(
 app.include_router(clinic_router)
 app.include_router(bookings_router)
 
+PUBLIC_DIR = Path(__file__).resolve().parent.parent / "public"
+
 
 @app.get("/", include_in_schema=False)
 def home():
-    return {"message": "Koya Clinic Booking API", "status": "setup"}
+    return FileResponse(PUBLIC_DIR / "index.html", media_type="text/html")
+
+
+@app.get("/styles.css", include_in_schema=False)
+def stylesheet():
+    return FileResponse(PUBLIC_DIR / "styles.css", media_type="text/css")
+
+
+@app.get("/app.js", include_in_schema=False)
+def frontend_script():
+    return FileResponse(PUBLIC_DIR / "app.js", media_type="application/javascript")
 
 
 @app.get("/health", tags=["system"])
