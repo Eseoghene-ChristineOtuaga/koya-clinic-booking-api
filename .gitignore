@@ -218,3 +218,8 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Vercel local state and additional secrets
+.vercel/
+.env.*
+!.env.example
