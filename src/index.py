@@ -1,18 +1,23 @@
 """ASGI entrypoint recognized automatically by Vercel."""
 import os
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from src.database import get_engine
+from src.slots_api import router as clinic_router
 
 app = FastAPI(
     title="Koya Clinic Booking API",
     version="0.1.0",
     description="Koya Cohort 4 assessment — database connection setup.",
 )
+
+
+app.include_router(clinic_router)
 
 
 @app.get("/", include_in_schema=False)
@@ -44,3 +49,13 @@ def ready():
 @app.exception_handler(404)
 async def not_found(_request, _exception):
     return JSONResponse(status_code=404, content={"error": "not found"})
+
+
+@app.exception_handler(HTTPException)
+async def http_error(_request: Request, exc: HTTPException):
+    return JSONResponse(status_code=exc.status_code, content={"error": str(exc.detail)}, headers=exc.headers)
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_error(_request: Request, _exc: RequestValidationError):
+    return JSONResponse(status_code=400, content={"error": "invalid request"})
