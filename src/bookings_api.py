@@ -60,6 +60,22 @@ def failure(status: int, message: str, headers: dict | None = None):
     return JSONResponse(status_code=status, content={"error": message}, headers=headers)
 
 
+def store_idempotent_response(body: dict, headers: dict) -> dict:
+    """Persist retry-relevant headers alongside the body, never in the public JSON."""
+    if not headers:
+        return body  # Compatible with existing stored responses.
+    return {"__koya_response_v1__": {"body": body, "headers": headers}}
+
+
+def replay_idempotent_response(status: int, saved: dict) -> JSONResponse:
+    """Restore the original status, response body, and Retry-After header."""
+    if isinstance(saved, dict) and set(saved) == {"__koya_response_v1__"}:
+        envelope = saved["__koya_response_v1__"]
+        if isinstance(envelope, dict) and "body" in envelope and "headers" in envelope:
+            return JSONResponse(status_code=status, content=envelope["body"], headers=envelope["headers"])
+    return JSONResponse(status_code=status, content=saved)
+
+
 @router.post("/bookings")
 def create_booking(
     payload: BookingInput,
@@ -96,7 +112,7 @@ def create_booking(
                 return failure(422, "idempotency key already used for different request")
             if prior.status_code is not None:
                 # A retry is not a new booking attempt.
-                return JSONResponse(status_code=prior.status_code, content=prior.response_body)
+                return replay_idempotent_response(prior.status_code, prior.response_body)
 
         # Serialize attempts for the same normalized email across Vercel instances.
         session.execute(
@@ -154,7 +170,7 @@ def create_booking(
 
         if idempotency_key is not None:
             prior.status_code = code
-            prior.response_body = body
+            prior.response_body = store_idempotent_response(body, response_headers)
 
     return JSONResponse(status_code=code, content=body, headers=response_headers)
 
