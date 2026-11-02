@@ -9,6 +9,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from src.database import get_engine
 from src.slots_api import router as clinic_router
+from src.bookings_api import router as bookings_router
 
 app = FastAPI(
     title="Koya Clinic Booking API",
@@ -18,6 +19,7 @@ app = FastAPI(
 
 
 app.include_router(clinic_router)
+app.include_router(bookings_router)
 
 
 @app.get("/", include_in_schema=False)
