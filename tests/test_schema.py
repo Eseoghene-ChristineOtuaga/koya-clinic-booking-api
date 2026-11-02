@@ -3,16 +3,16 @@ from src.models import Base
 
 def test_expected_tables_exist():
     assert set(Base.metadata.tables) == {
-        "slots",
-        "bookings",
-        "idempotency_keys",
-        "booking_attempts",
-        "rate_limit_locks",
+        "koya_clinic.slots",
+        "koya_clinic.bookings",
+        "koya_clinic.idempotency_keys",
+        "koya_clinic.booking_attempts",
+        "koya_clinic.rate_limit_locks",
     }
 
 
 def test_booking_unique_partial_index_exists():
-    booking = Base.metadata.tables["bookings"]
+    booking = Base.metadata.tables["koya_clinic.bookings"]
     unique_indexes = [index for index in booking.indexes if index.unique]
     assert any(
         index.name == "uq_one_confirmed_booking_per_slot"
