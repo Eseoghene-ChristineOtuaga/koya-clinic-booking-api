@@ -25,3 +25,10 @@ def test_openapi_documentation():
     response = TestClient(app).get("/openapi.json")
     assert response.status_code == 200
     assert response.json()["info"]["title"] == "Koya Clinic Booking API"
+
+
+def test_ready_without_database_url(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    response = TestClient(app).get("/ready")
+    assert response.status_code == 503
+    assert response.json() == {"error": "database not configured"}
