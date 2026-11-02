@@ -1,10 +1,25 @@
 # Koya Clinic Booking API
 
-A full-stack clinic appointment-booking system for Koya Academy Cohort 4. Built with FastAPI, PostgreSQL (Supabase), and vanilla JavaScript, hosted on Vercel.
+A full-stack clinic appointment booking system for the Koya Academy Cohort 4 assessment. Built with **FastAPI**, **PostgreSQL (Supabase)**, and **vanilla HTML/CSS/JavaScript**; deployed on **Vercel**.
 
-> **Current status:** FastAPI starter is deployed. Database schema and Alembic migration files are committed, but no real database migration has been run. Booking endpoints, API-key authentication, and rate limiting are still to be implemented.
+- **Live webpage:** https://koya-clinic-booking-api.vercel.app/
+- **Interactive API documentation:** https://koya-clinic-booking-api.vercel.app/docs
+- **Database health:** https://koya-clinic-booking-api.vercel.app/ready
+- **Assessment contract:** https://koyaacademy.com/assessment-api
 
-## Quick start
+## Implemented features
+
+| Level | Features |
+| --- | --- |
+| 1 | List appointment slots, book a slot, retrieve a booking |
+| 2 | API key authorization, validated booking details, JSON errors |
+| 3 | PostgreSQL row locks and unique confirmed-slot constraint, cancellation |
+| 4 | Transactional idempotency keys (including replayed `Retry-After`), cursor-based booking pagination |
+| 5 | Per-normalized-email, rolling 60-second limit of five booking attempts |
+
+**Implementation is not proof of correctness:** run the smoke tests and live verification suite below. The live test suite deliberately uses fictional details, and **never calls `/reset`**.
+
+## Run locally (Windows PowerShell)
 
 Requirements: Python 3.11+ and Git.
 
@@ -14,53 +29,71 @@ cd koya-clinic-booking-api
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
-python -m uvicorn src.index:app --reload
-```
-
-Open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) to view the local OpenAPI documentation. The root path returns a JSON starter response under Uvicorn; the patient-facing placeholder in `public/index.html` is served directly by Vercel.
-
-To run tests:
-
-```powershell
 python -m pytest -q
 ```
 
-## Hosting
+To run the API locally, create a **private, uncommitted** `.env` with your database URL and API key, load it into your shell, and run:
 
-Vercel automatically recognizes the exported `app` object in `src/index.py`. The static web page lives in `public/`.
-
-Import this GitHub repository into [Vercel](https://vercel.com/new) and use the **FastAPI** framework (the `vercel.json` file declares it). **Do not add actual API keys or database passwords to Git.**
-
-Database configuration in later milestones:
-1. Provision Supabase PostgreSQL.
-2. Copy `.env.example` to `.env` for local configuration. Supply the actual `DATABASE_URL` locally; never commit it.
-3. Set `DATABASE_URL` and `API_KEY` in Vercel Environment Variables.
-4. Apply the initial migration to the new database using `python -m alembic upgrade head` from a trusted development environment. Never run migrations in request handlers.
-
-**Important:** For Vercel serverless functions, use Supabase's *Transaction pooler* URL (port 6543), and change the URL scheme from `postgresql://` or `postgres://` to `postgresql+psycopg://`. The project disables prepared statements and uses SQLAlchemy `NullPool` for this mode. The database connection has not yet been provisioned or live-tested.
-
-The `/health` endpoint intentionally checks only process liveness, not database connectivity.
-
-## Project layout
-
-```text
-src/index.py         FastAPI ASGI entrypoint
-src/database.py      SQLAlchemy engine/session helpers
-src/models.py        PostgreSQL models (not yet migrated)
-migrations/          Alembic schema migration files
-alembic.ini          Migration configuration
-public/              Static UI placeholder
-tests/               Initial smoke tests
-vercel.json          Vercel framework configuration
-.env.example         Environment variable names, no secrets
+```powershell
+python -m uvicorn src.index:app --reload
 ```
 
-## Specification and progress
+The UI is served at `/`; the API docs at `/docs`.
 
-- [Koya assessment API contract](https://koyaacademy.com/assessment-api)
-- [Notion project board](https://app.notion.com/p/40c11f4d5e0c8109ae96f780e02c452e)
-- The eventual API will implement `/reset`, `/slots`, `/bookings`, and `/bookings/{id}` exactly as specified.
+## Verify the live assessment requirements
 
-## Security
+Run **after** the unit tests and after production reports `READY` in Vercel:
 
-Never commit actual `DATABASE_URL` or `API_KEY` values. Patient details should never be logged in plaintext. The live assessment endpoints will require `X-API-Key`, including the reset endpoint.
+```powershell
+python scripts/verify_live.py
+```
+
+The script prompts **privately** for your API key (it is not saved). By default it tests `https://koya-clinic-booking-api.vercel.app`.
+
+It checks:
+
+1. Slot listing, provider filtering, booking creation, and lookup.
+2. Authentication and invalid booking fields.
+3. Two simultaneous booking requests for one slot (exactly one succeeds), cancellation, repeat cancellation, and slot release.
+4. Same-key booking retry, key reuse with different payload (422), two pages of email-filtered bookings, and invalid pagination limit.
+5. Six rapid booking attempts by one email: the first five reach slot handling, the sixth gets 429 + integer `Retry-After`. It also checks replaying that 429 with the same idempotency key retains the **exact** status, body, and header.
+
+**Prerequisites:** at least three future, unbooked slots, and network access to the live API.
+
+**Safety:** the script never resets slots, uses uniquely generated `example.com` fictional patient emails, cancels successful test bookings in a `finally` block, and prints a warning if a cancellation fails. Cancelled booking history and rate-limit attempt records remain (by design). Prefer running against a dedicated staging deployment and database if available; use production only when these limited test writes are acceptable. Check the output before submitting. If a test fails, investigate rather than repeatedly running it.
+
+For a non-production deployment, override the base URL in PowerShell:
+
+```powershell
+$env:KOYA_BASE_URL="https://YOUR-STAGING-DEPLOYMENT.vercel.app"
+python scripts/verify_live.py
+```
+
+## Manual browser checklist
+
+Open the live website at desktop and mobile widths. Enter the assessment API key into the demo access dialog. Select a doctor, an available date and time, and submit a **fictional** booking. Confirm the booking ID appears, then find the booking by email under **Manage booking** and cancel it. Confirm the slot is free again. Test the mobile hamburger menu and navbar transition from solid green at page top to frosted glass on scroll.
+
+The shared `X-API-Key` is an **assessment/demo** authentication mechanism, not secure patient login. The webpage never bundles or saves the key; the visitor enters it for the session. Do not use real patient information.
+
+## Deployment and security
+
+Vercel recognizes `src/index.py` and the `vercel.json` FastAPI setting. Configure `API_KEY` and `DATABASE_URL` as **sensitive server environment variables**, not Git-tracked files. Use Supabase PostgreSQL transaction pooling (port 6543) and the `postgresql+psycopg://` URL scheme. The schema `koya_clinic` is isolated from other application schemas.
+
+For demo/testing use fictional patients. Rotate any API key that has appeared in screenshots or shared messages before final submission. The assessment also requires a demonstration video of at most five minutes.
+
+## Source structure
+
+```text
+src/index.py                 FastAPI ASGI entrypoint and static routes
+src/bookings_api.py          Booking, cancellation, pagination, rate limit
+src/slots_api.py             API-key validation, reset, slot listing
+src/models.py                PostgreSQL/SQLAlchemy models
+src/database.py              Database session and engine
+migrations/                  Alembic database migrations
+public/                      Responsive booking webpage
+tests/                       Automated Python tests
+scripts/verify_live.py       Live contract verification + cleanup
+.vscode/mcp.json             Playwright and Chrome DevTools MCP configuration
+```
+
+Project notes: https://app.notion.com/p/40c11f4d5e0c8109ae96f780e02c452e
