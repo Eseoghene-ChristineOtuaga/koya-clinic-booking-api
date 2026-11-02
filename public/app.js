@@ -211,3 +211,9 @@ $("#lookup-form").addEventListener("submit",e=>{e.preventDefault();lookupBooking
 $("#load-more").addEventListener("click",()=>lookupBookings(true));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden && state.key)loadSlots().catch(()=>{});});
 showAccess();
+
+// Lightweight sticky-nav transition. Passive scroll keeps interaction smooth.
+const siteHeader = document.querySelector(".site-header");
+function updateHeaderOnScroll(){siteHeader.classList.toggle("is-scrolled",window.scrollY>24);}
+window.addEventListener("scroll",updateHeaderOnScroll,{passive:true});
+updateHeaderOnScroll();
