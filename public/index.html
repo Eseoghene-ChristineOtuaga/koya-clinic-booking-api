@@ -2,26 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Koya Clinic — Appointments</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#143b32">
+  <meta name="description" content="Koya Clinic appointment scheduling demonstration. Select a clinician, choose a time, and manage your booking.">
+  <title>Koya Clinic — Care, on your time</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
 </head>
 <body>
-  <main class="shell">
-    <header class="top"><span class="brand">Koya <strong>Clinic</strong></span><span class="stage">Milestone 0 · Starter</span></header>
-    <section class="hero">
-      <p class="eyebrow">YOUR CARE, SIMPLIFIED</p>
-      <h1>Book time for what matters.</h1>
-      <p>Find available appointments and reserve a time with your clinician.</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="brand" aria-label="Koya Clinic home">
+        <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
+        <span>koya<span class="brand-light">clinic.</span></span>
+      </a>
+      <nav class="header-links" aria-label="Main navigation">
+        <a href="#book">Find an appointment</a>
+        <a href="#manage">Manage booking</a>
+      </nav>
+      <span class="header-tag"><span class="status-dot"></span> Demo booking portal</span>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="intro">
+      <div class="container intro-layout">
+        <div class="intro-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> CARE THAT FITS YOUR DAY</div>
+          <h1>Feeling better<br>starts <em>here.</em></h1>
+          <p>Good care should be easy to reach. Find an available appointment, choose a time that works, and make a booking in a few simple steps.</p>
+          <a class="intro-cta" href="#book">Find your appointment <span aria-hidden="true">↗</span></a>
+          <div class="intro-footnote"><span class="mini-symbol" aria-hidden="true">✳</span> A simple way to schedule your care.</div>
+        </div>
+        <div class="intro-art" aria-hidden="true">
+          <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+          <div class="art-card art-card-top"><span class="art-card-icon">+</span><span>Thoughtful care,<br>made simple.</span></div>
+          <div class="art-bloom bloom-one"></div><div class="art-bloom bloom-two"></div><div class="art-center"><span>+</span></div>
+          <div class="art-card art-card-bottom"><span class="art-tick">✓</span><span>Your time matters.</span></div>
+          <div class="art-caption">Koya / Appointments</div>
+        </div>
+      </div>
     </section>
-    <section class="panel" aria-labelledby="setup-title">
-      <h2 id="setup-title">System setup</h2>
-      <p id="status" role="status">Checking API connection…</p>
-      <p class="hint">Booking functionality will be enabled after the database and API endpoints are implemented.</p>
-      <a class="docs" href="/docs">Explore API documentation</a>
+
+    <section class="booking-area" id="book">
+      <div class="container">
+        <div class="section-heading">
+          <div><div class="eyebrow eyebrow-dark">THE NEXT STEP</div><h2>Let's find your <em>time.</em></h2><p>Select a clinician and one of their available appointment times.</p></div>
+          <div class="section-index">01 / BOOK AN APPOINTMENT</div>
+        </div>
+        <div class="booking-layout">
+          <div class="booking-main">
+            <div class="step-heading"><span class="step-number">01</span><div><h3>Choose your clinician</h3><p>See who's available for a consultation.</p></div></div>
+            <div id="providers" class="provider-list" aria-live="polite"><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
+            <div class="step-heading second-step"><span class="step-number">02</span><div><h3>Pick a date &amp; time</h3><p id="time-help">Select a clinician to view their availability.</p></div></div>
+            <div class="time-panel">
+              <div class="time-panel-top"><span class="small-label">AVAILABLE APPOINTMENTS</span><span id="timezone" class="timezone-note"></span></div>
+              <div id="dates" class="date-list" aria-label="Available dates"></div>
+              <div id="times" class="time-list" aria-label="Available times"><p class="empty-hint">Choose a clinician above to see available times.</p></div>
+            </div>
+          </div>
+
+          <aside class="booking-sidebar">
+            <div class="summary-card">
+              <div class="summary-top"><span class="small-label">YOUR APPOINTMENT</span><span class="summary-icon" aria-hidden="true">✳</span></div>
+              <h3>At a glance</h3>
+              <div class="summary-row"><span>Clinician</span><strong id="summary-provider">Not selected</strong></div>
+              <div class="summary-row"><span>Date</span><strong id="summary-date">Not selected</strong></div>
+              <div class="summary-row"><span>Time</span><strong id="summary-time">Not selected</strong></div>
+              <div class="summary-divider"></div>
+              <form id="booking-form">
+                <p class="form-title">Your details</p>
+                <label for="patient-name">Full name <span aria-hidden="true">*</span></label>
+                <input id="patient-name" name="name" autocomplete="name" type="text" maxlength="255" placeholder="e.g. Ada Obi" required>
+                <label for="patient-email">Email address <span aria-hidden="true">*</span></label>
+                <input id="patient-email" name="email" autocomplete="email" type="email" placeholder="you@example.com" required>
+                <p class="form-note">Used to look up your appointment. No confirmation emails are sent by this demo.</p>
+                <button id="book-button" class="primary-button" type="submit">Confirm appointment <span aria-hidden="true">↗</span></button>
+                <p id="book-message" class="form-message" role="status" aria-live="polite"></p>
+              </form>
+            </div>
+            <div class="sidebar-note"><span aria-hidden="true">✳</span><p><strong>Something to know</strong><br>Appointment times are shown in your device's local timezone.</p></div>
+          </aside>
+        </div>
+      </div>
     </section>
-    <footer>Clinic Booking API · Koya Cohort 4</footer>
+
+    <section class="manage-section" id="manage">
+      <div class="container manage-layout">
+        <div class="manage-intro"><span class="eyebrow eyebrow-dark">PLANS CHANGE. THAT'S OKAY.</span><h2>Already have<br>an <em>appointment?</em></h2><p>Look up a booking using the email address you provided. You can view its details or cancel if you need to.</p></div>
+        <div class="manage-card">
+          <h3>Find your booking</h3>
+          <p>We'll show appointments associated with your email.</p>
+          <form id="lookup-form" class="lookup-form">
+            <label for="lookup-email">Email address</label>
+            <div class="lookup-controls"><input id="lookup-email" type="email" autocomplete="email" placeholder="you@example.com" required><button class="dark-button" type="submit">Find bookings</button></div>
+          </form>
+          <p id="lookup-message" role="status" class="form-message" aria-live="polite"></p>
+          <div id="booking-results" class="booking-results"></div>
+          <button id="load-more" class="text-button" type="button" hidden>Load more appointments <span aria-hidden="true">↓</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="end-note"><div class="container end-inner"><span class="end-star" aria-hidden="true">✳</span><p>More time for what <em>matters.</em></p></div></section>
   </main>
-  <script src="/app.js" defer></script>
+
+  <footer class="site-footer"><div class="container footer-inner"><div><span class="footer-brand">koyaclinic.</span><p>Appointment booking, thoughtfully simplified.</p></div><div class="footer-links"><a href="#book">Book</a><a href="#manage">Manage</a><a href="/docs">API docs</a></div><span class="copyright">Koya Cohort 4 · Assessment demonstration</span></div></footer>
+
+  <dialog id="access-dialog" aria-labelledby="access-title">
+    <form id="access-form" class="access-content">
+      <div class="access-symbol" aria-hidden="true">✳</div>
+      <h2 id="access-title">Welcome to Koya Clinic.</h2>
+      <p>This is an assessment demo. Enter your API access key to load appointments. Your key stays in this browser tab and is never saved to local storage.</p>
+      <label for="access-key">API access key</label>
+      <input id="access-key" type="password" required autocomplete="off" spellcheck="false" placeholder="Enter your access key">
+      <p id="access-error" class="form-message" role="alert"></p>
+      <button type="submit" class="primary-button">Continue to appointments <span aria-hidden="true">→</span></button>
+      <p class="access-small">This is not a public patient authentication system. Do not enter real patient information.</p>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+    <div class="confirm-content"><span class="confirm-check" aria-hidden="true">✓</span><p class="eyebrow eyebrow-dark">ALL SET</p><h2 id="confirm-title">You're booked.</h2><p id="confirmation-description"></p><div id="confirmation-details" class="confirm-details"></div><button id="confirmation-done" class="primary-button" type="button">Back to appointments <span aria-hidden="true">↗</span></button></div>
+  </dialog>
 </body>
 </html>
