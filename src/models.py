@@ -1,12 +1,12 @@
 """Database models that match migrations/versions/0001_initial.py."""
 from datetime import datetime
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Identity, Index, Integer, JSON, String, text
+from sqlalchemy import MetaData, BigInteger, CheckConstraint, DateTime, ForeignKey, Identity, Index, Integer, JSON, String, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
-    pass
+    metadata = MetaData(schema="koya_clinic")
 
 
 class Slot(Base):
@@ -27,7 +27,7 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
-    slot_id: Mapped[str] = mapped_column(String(255), ForeignKey("slots.id"), nullable=False)
+    slot_id: Mapped[str] = mapped_column(String(255), ForeignKey("koya_clinic.slots.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(320), nullable=False)
     status: Mapped[str] = mapped_column(String(12), nullable=False)
