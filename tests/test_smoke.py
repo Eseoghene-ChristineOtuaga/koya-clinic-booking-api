@@ -6,7 +6,8 @@ from src.index import app
 def test_home():
     response = TestClient(app).get("/")
     assert response.status_code == 200
-    assert response.json()["status"] == "setup"
+    assert "text/html" in response.headers["content-type"]
+    assert "koyaclinic." in response.text
 
 
 def test_health():
@@ -32,3 +33,13 @@ def test_ready_without_database_url(monkeypatch):
     response = TestClient(app).get("/ready")
     assert response.status_code == 503
     assert response.json() == {"error": "database not configured"}
+
+
+def test_frontend_assets():
+    client = TestClient(app)
+    css = client.get("/styles.css")
+    js = client.get("/app.js")
+    assert css.status_code == 200
+    assert "text/css" in css.headers["content-type"]
+    assert js.status_code == 200
+    assert "javascript" in js.headers["content-type"]
