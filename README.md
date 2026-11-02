@@ -2,7 +2,7 @@
 
 A full-stack clinic appointment-booking system for Koya Academy Cohort 4. Built with FastAPI, PostgreSQL (Supabase), and vanilla JavaScript, hosted on Vercel.
 
-> **Current status: Milestone 0 starter only.** The booking endpoints, database migrations, API-key authentication, and rate limiting have not been implemented yet.
+> **Current status:** FastAPI starter is deployed. Database schema and Alembic migration files are committed, but no real database migration has been run. Booking endpoints, API-key authentication, and rate limiting are still to be implemented.
 
 ## Quick start
 
@@ -35,7 +35,9 @@ Database configuration in later milestones:
 1. Provision Supabase PostgreSQL.
 2. Copy `.env.example` to `.env` for local configuration. Supply the actual `DATABASE_URL` locally; never commit it.
 3. Set `DATABASE_URL` and `API_KEY` in Vercel Environment Variables.
-4. Apply version-controlled schema migrations (not yet created).
+4. Apply the initial migration to the new database using `python -m alembic upgrade head` from a trusted development environment. Never run migrations in request handlers.
+
+**Important:** For Vercel serverless functions, use Supabase's *Transaction pooler* URL (port 6543), and change the URL scheme from `postgresql://` or `postgres://` to `postgresql+psycopg://`. The project disables prepared statements and uses SQLAlchemy `NullPool` for this mode. The database connection has not yet been provisioned or live-tested.
 
 The `/health` endpoint intentionally checks only process liveness, not database connectivity.
 
@@ -44,7 +46,9 @@ The `/health` endpoint intentionally checks only process liveness, not database 
 ```text
 src/index.py         FastAPI ASGI entrypoint
 src/database.py      SQLAlchemy engine/session helpers
-src/models.py        Initial database models (not migrated)
+src/models.py        PostgreSQL models (not yet migrated)
+migrations/          Alembic schema migration files
+alembic.ini          Migration configuration
 public/              Static UI placeholder
 tests/               Initial smoke tests
 vercel.json          Vercel framework configuration
