@@ -35,8 +35,32 @@ def ready():
     try:
         with get_engine().connect() as connection:
             connection.execute(text("SELECT 1"))
-    except (SQLAlchemyError, OSError, TimeoutError):
-        return JSONResponse(status_code=503, content={"error": "database unavailable"})
+    except Exception as exc:
+        # Temporary, deliberately coarse diagnostic. Never return raw errors,
+        # connection URLs, usernames, passwords, or driver messages.
+        message = str(exc).lower()
+        if "password authentication failed" in message or "28p01" in message:
+            reason = "authentication_failed"
+        elif "name or service not known" in message or "getaddrinfo" in message or "could not translate host" in message:
+            reason = "hostname_lookup_failed"
+        elif "connection refused" in message or "could not connect to server" in message:
+            reason = "connection_refused"
+        elif "timeout" in message or "timed out" in message:
+            reason = "connection_timeout"
+        elif "invalid dsn" in message or "could not parse" in message or "could not parse sql" in message or "can't load plugin" in message or "no such module" in message:
+            reason = "connection_configuration"
+        elif "ssl" in message or "certificate" in message:
+            reason = "tls_error"
+        elif "role" in message and "does not exist" in message:
+            reason = "database_role_not_found"
+        elif "database" in message and "does not exist" in message:
+            reason = "database_not_found"
+        else:
+            reason = "unclassified_connection_error"
+        return JSONResponse(
+            status_code=503,
+            content={"error": "database unavailable", "diagnostic": reason},
+        )
 
     return {"status": "ok", "database": "connected"}
 
