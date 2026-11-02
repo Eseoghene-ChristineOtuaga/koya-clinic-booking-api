@@ -25,6 +25,7 @@ KEY = os.environ.get("KOYA_API_KEY") or getpass.getpass("Enter Koya API key (hid
 IDENTITY = uuid.uuid4().hex[:12]
 created_booking_ids: set[str] = set()
 checks = 0
+failed = False
 
 
 def request(method: str, path: str, body: dict | None = None, *, headers: dict | None = None):
@@ -164,7 +165,7 @@ try:
     print(f"\nALL {checks} CHECKS PASSED. Temporary successful bookings will be cancelled.")
 except (AssertionError, RuntimeError, URLError, KeyError, ValueError) as error:
     print("\nFAILED:", error, file=sys.stderr)
-    sys.exit_code = 1
+    failed = True
 finally:
     for booking_id in list(created_booking_ids):
         try:
@@ -173,3 +174,6 @@ finally:
                 print("WARNING: could not cancel test booking", booking_id, "status", status)
         except Exception as e:
             print("WARNING: cleanup failed for booking", booking_id, type(e).__name__)
+
+if failed:
+    sys.exit(1)
