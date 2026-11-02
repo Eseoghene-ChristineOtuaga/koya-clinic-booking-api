@@ -4,3 +4,50 @@
 .site-header.is-scrolled{background:rgba(19,58,48,.79);border-bottom-color:rgba(238,248,230,.19);box-shadow:0 8px 28px rgba(13,43,36,.13);-webkit-backdrop-filter:blur(18px) saturate(140%);backdrop-filter:blur(18px) saturate(140%);}
 #book,#manage{scroll-margin-top:110px;}
 @media(max-width:700px){#book,#manage{scroll-margin-top:85px;}}
+
+/* Frosted navigation, including its resting state. */
+.site-header{
+  position:sticky;
+  top:0;
+  z-index:60;
+  background:rgba(18,55,46,.68);
+  -webkit-backdrop-filter:blur(22px) saturate(145%);
+  backdrop-filter:blur(22px) saturate(145%);
+  border-bottom:1px solid rgba(235,249,232,.22);
+  box-shadow:0 2px 14px rgba(9,33,27,.08);
+  transition:background-color .25s ease,box-shadow .25s ease;
+}
+.site-header.is-scrolled{
+  background:rgba(18,55,46,.76);
+  box-shadow:0 9px 32px rgba(9,33,27,.18);
+}
+.menu-toggle{display:none;position:relative;flex-shrink:0;align-items:center;justify-content:center;width:44px;height:44px;border:1px solid rgba(229,245,228,.32);border-radius:8px;background:rgba(245,255,241,.07);color:#f8f6ed}
+.menu-toggle:hover{background:rgba(245,255,241,.15)}
+.menu-bars{display:flex;flex-direction:column;gap:5px}
+.menu-bars span{display:block;width:20px;height:2px;border-radius:2px;background:currentColor;transition:transform .2s ease,opacity .2s ease}
+.menu-toggle[aria-expanded=true] .menu-bars span:first-child{transform:translateY(7px) rotate(45deg)}
+.menu-toggle[aria-expanded=true] .menu-bars span:nth-child(2){opacity:0}
+.menu-toggle[aria-expanded=true] .menu-bars span:last-child{transform:translateY(-7px) rotate(-45deg)}
+@media(max-width:700px){
+  .header-inner{position:relative}
+  .menu-toggle{display:inline-flex;margin-left:auto}
+  .header-links{
+    display:none;
+    position:absolute;
+    top:calc(100% + 12px);
+    left:0;
+    right:0;
+    flex-direction:column;
+    gap:0;
+    padding:10px;
+    background:rgba(19,57,47,.93);
+    -webkit-backdrop-filter:blur(24px) saturate(150%);
+    backdrop-filter:blur(24px) saturate(150%);
+    border:1px solid rgba(235,249,232,.25);
+    border-radius:10px;
+    box-shadow:0 16px 38px rgba(9,33,27,.22);
+  }
+  .header-links.is-open{display:flex}
+  .header-links a{display:block;padding:15px 16px;border-radius:6px}
+  .header-links a:hover,.header-links a:focus-visible{background:rgba(255,255,255,.1)}
+}
