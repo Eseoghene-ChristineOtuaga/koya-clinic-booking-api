@@ -7,7 +7,11 @@ const dateFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "s
 const longDateFmt = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "your local time";
-$("#timezone").textContent = "Times in " + tz;
+// Use a reader-friendly timezone label instead of an IANA identifier.
+const timezoneLabel = tz === "Africa/Lagos"
+  ? "Your local time · WAT (UTC+1)"
+  : "Your local time · " + (new Intl.DateTimeFormat(undefined, {timeZoneName:"short"}).formatToParts(new Date()).find(x=>x.type==="timeZoneName")?.value || tz);
+$("#timezone").textContent = timezoneLabel;
 
 const dateKey = (value) => {
   const d = new Date(value);
@@ -217,3 +221,22 @@ const siteHeader = document.querySelector(".site-header");
 function updateHeaderOnScroll(){siteHeader.classList.toggle("is-scrolled",window.scrollY>24);}
 window.addEventListener("scroll",updateHeaderOnScroll,{passive:true});
 updateHeaderOnScroll();
+
+// Accessible mobile navigation: tap to open, then close on navigation or outside click.
+const menuToggle = document.querySelector(".menu-toggle");
+const primaryNav = document.querySelector("#primary-navigation");
+function closeMenu(){
+  menuToggle.setAttribute("aria-expanded","false");
+  menuToggle.setAttribute("aria-label","Open navigation menu");
+  primaryNav.classList.remove("is-open");
+}
+menuToggle.addEventListener("click",()=>{
+  const isOpen=menuToggle.getAttribute("aria-expanded")==="true";
+  menuToggle.setAttribute("aria-expanded",String(!isOpen));
+  menuToggle.setAttribute("aria-label",isOpen?"Open navigation menu":"Close navigation menu");
+  primaryNav.classList.toggle("is-open",!isOpen);
+});
+primaryNav.querySelectorAll("a").forEach(a=>a.addEventListener("click",closeMenu));
+document.addEventListener("click",e=>{if(!primaryNav.contains(e.target)&&!menuToggle.contains(e.target))closeMenu()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu()});
+window.matchMedia("(min-width:701px)").addEventListener("change",e=>{if(e.matches)closeMenu()});
