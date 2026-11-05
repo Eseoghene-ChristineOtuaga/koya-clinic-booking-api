@@ -1,7 +1,23 @@
 """Contract-level smoke checks that do not require live PostgreSQL."""
+import pytest
 from fastapi.testclient import TestClient
 
+from src.database import get_session
+
 from src.index import app
+
+
+@pytest.fixture
+def no_database():
+    """Validation tests never query PostgreSQL; avoid engine creation in CI."""
+    def fake_get_session():
+        yield None
+
+    app.dependency_overrides[get_session] = fake_get_session
+    try:
+        yield
+    finally:
+        app.dependency_overrides.pop(get_session, None)
 
 
 def test_booking_routes_are_registered():
@@ -26,7 +42,7 @@ def test_bookings_require_authentication(monkeypatch):
         assert response.json() == {"error": "invalid API key"}
 
 
-def test_invalid_booking_is_json_error(monkeypatch):
+def test_invalid_booking_is_json_error(monkeypatch, no_database):
     monkeypatch.setenv("API_KEY", "unit-test-only")
     response = TestClient(app).post(
         "/bookings",
@@ -37,7 +53,7 @@ def test_invalid_booking_is_json_error(monkeypatch):
     assert "error" in response.json()
 
 
-def test_booking_limit_validation(monkeypatch):
+def test_booking_limit_validation(monkeypatch, no_database):
     monkeypatch.setenv("API_KEY", "unit-test-only")
     response = TestClient(app).get(
         "/bookings?email=ada@example.com&limit=51",
