@@ -35,7 +35,7 @@
       <div class="container intro-layout">
         <div class="intro-copy">
           <h1>Feeling better<br>starts <em>here.</em></h1>
-          <p>Good care should be easy to reach. Find an available appointment, choose a time that works, and make a booking in a few simple steps.</p>
+          <p>Book an appointment with a clinician at a time that suits you.</p>
           <a class="intro-cta" href="#book">Find your appointment <span aria-hidden="true">↗</span></a>
         </div>
         <div class="intro-art" aria-hidden="true">
@@ -50,12 +50,12 @@
     <section class="booking-area" id="book">
       <div class="container">
         <div class="section-heading">
-          <div><div class="eyebrow eyebrow-dark">THE NEXT STEP</div><h2>Let's find your <em>time.</em></h2><p>Select a clinician and one of their available appointment times.</p></div>
-          <div class="section-index">01 / BOOK AN APPOINTMENT</div>
+          <div><h2>Let's find your <em>time.</em></h2></div>
+          
         </div>
         <div class="booking-layout">
           <div class="booking-main">
-            <div class="step-heading"><span class="step-number">01</span><div><h3>Choose your clinician</h3><p>See who's available for a consultation.</p></div></div>
+            <div class="step-heading"><span class="step-number">01</span><div><h3>Choose your clinician</h3></div></div>
             <div id="providers" class="provider-list" aria-live="polite"><div class="skeleton-card"></div><div class="skeleton-card"></div></div>
             <div class="step-heading second-step"><span class="step-number">02</span><div><h3>Pick a date &amp; time</h3><p id="time-help">Select a clinician to view their availability.</p></div></div>
             <div class="time-panel">
@@ -79,12 +79,12 @@
                 <input id="patient-name" name="name" autocomplete="name" type="text" maxlength="255" placeholder="e.g. Ada Obi" required>
                 <label for="patient-email">Email address <span aria-hidden="true">*</span></label>
                 <input id="patient-email" name="email" autocomplete="email" type="email" placeholder="you@example.com" required>
-                <p class="form-note">Used to look up your appointment. No confirmation emails are sent by this demo.</p>
+                
                 <button id="book-button" class="primary-button" type="submit">Confirm appointment <span aria-hidden="true">↗</span></button>
                 <p id="book-message" class="form-message" role="status" aria-live="polite"></p>
               </form>
             </div>
-            <div class="sidebar-note"><span aria-hidden="true">✳</span><p><strong>Something to know</strong><br>Appointment times are shown in your device's local timezone.</p></div>
+            
           </aside>
         </div>
       </div>
@@ -92,10 +92,10 @@
 
     <section class="manage-section" id="manage">
       <div class="container manage-layout">
-        <div class="manage-intro"><span class="eyebrow eyebrow-dark">PLANS CHANGE. THAT'S OKAY.</span><h2>Already have<br>an <em>appointment?</em></h2><p>Look up a booking using the email address you provided. You can view its details or cancel if you need to.</p></div>
+        <div class="manage-intro"><h2>Already have<br>an <em>appointment?</em></h2></div>
         <div class="manage-card">
           <h3>Find your booking</h3>
-          <p>We'll show appointments associated with your email.</p>
+          
           <form id="lookup-form" class="lookup-form">
             <label for="lookup-email">Email address</label>
             <div class="lookup-controls"><input id="lookup-email" type="email" autocomplete="email" placeholder="you@example.com" required><button class="dark-button" type="submit">Find bookings</button></div>
@@ -110,18 +110,18 @@
     <section class="end-note"><div class="container end-inner"><span class="end-star" aria-hidden="true">✳</span><p>More time for what <em>matters.</em></p></div></section>
   </main>
 
-  <footer class="site-footer"><div class="container footer-inner"><div><span class="footer-brand">koyaclinic.</span><p>Appointment booking, thoughtfully simplified.</p></div><div class="footer-links"><a href="#book">Book</a><a href="#manage">Manage</a><a href="/docs">API docs</a></div></div></footer>
+  <footer class="site-footer"><div class="container footer-inner"><div><span class="footer-brand">koyaclinic.</span></div><div class="footer-links"><a href="#book">Book</a><a href="#manage">Manage</a><a href="/docs">API docs</a></div></div></footer>
 
   <dialog id="access-dialog" aria-labelledby="access-title">
     <form id="access-form" class="access-content">
       <div class="access-symbol" aria-hidden="true">✳</div>
       <h2 id="access-title">Welcome to Koya Clinic.</h2>
-      <p>This is an assessment demo. Enter your API access key to load appointments. Your key stays in this browser tab and is never saved to local storage.</p>
+      <p>Enter your assessment API key to continue.</p>
       <label for="access-key">API access key</label>
       <input id="access-key" type="password" required autocomplete="off" spellcheck="false" placeholder="Enter your access key">
       <p id="access-error" class="form-message" role="alert"></p>
       <button type="submit" class="primary-button">Continue to appointments <span aria-hidden="true">→</span></button>
-      <p class="access-small">This is not a public patient authentication system. Do not enter real patient information.</p>
+      <p class="access-small">Use sample patient details only.</p>
     </form>
   </dialog>
 
