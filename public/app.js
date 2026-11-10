@@ -1,8 +1,7 @@
 "use strict";
 // Patient demo uses dedicated website routes; never exposes the assessment API key.
 const $ = (s) => document.querySelector(s);
-const state = { slots: [], provider: null, date: null, selected: null, lookupEmail: null, cursor: null };
-const dateFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
+const state = { slots: [], provider: null, date: null, selected: null };
 const longDateFmt = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "your local time";
