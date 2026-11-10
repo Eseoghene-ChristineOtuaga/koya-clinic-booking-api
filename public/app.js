@@ -1,8 +1,7 @@
 "use strict";
-// Assessment-only client. The API key is supplied per browser tab, never bundled or persisted.
-// A production patient app would use separate patient authentication, not a shared administrator key.
+// Patient demo uses dedicated website routes; never exposes the assessment API key.
 const $ = (s) => document.querySelector(s);
-const state = { key: "", slots: [], provider: null, date: null, selected: null, lookupEmail: null, cursor: null };
+const state = { slots: [], provider: null, date: null, selected: null, lookupEmail: null, cursor: null };
 const dateFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
 const longDateFmt = new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
@@ -31,16 +30,9 @@ function element(tag, className, text) {
   return e;
 }
 function api(path, options = {}) {
-  if (!state.key) return Promise.reject(new Error("Enter your API access key first."));
-  const headers = { "X-API-Key": state.key, ...options.headers };
-  return fetch(path, { ...options, headers }).then(async (r) => {
+  return fetch("/web" + path, options).then(async (r) => {
     let data = {};
     try { data = await r.json(); } catch { /* no body */ }
-    if (r.status === 401) {
-      state.key = "";
-      showAccess();
-      throw new Error("Access key rejected. Please enter the current API key.");
-    }
     if (!r.ok) {
       const error = new Error(data.error || "The request could not be completed.");
       error.status = r.status;
@@ -50,27 +42,6 @@ function api(path, options = {}) {
     return data;
   });
 }
-function showAccess() {
-  const dialog = $("#access-dialog");
-  if (!dialog.open) dialog.showModal();
-  $("#access-key").value = "";
-  $("#access-key").focus();
-}
-$("#access-dialog").addEventListener("cancel", (event) => { if (!state.key) event.preventDefault(); });
-$("#access-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const key = $("#access-key").value.trim();
-  if (!key) return;
-  state.key = key;
-  $("#access-error").textContent = "";
-  try {
-    await loadSlots();
-    $("#access-dialog").close();
-    $("#access-key").value = "";
-  } catch (e) {
-    $("#access-error").textContent = e.message;
-  }
-});
 function uniqueProviders() {
   return Array.from(new Set(state.slots.map((s) => s.provider)));
 }
@@ -174,20 +145,23 @@ $("#booking-form").addEventListener("submit",async(event)=>{
   }
 });
 $("#confirmation-done").addEventListener("click",()=>$("#confirm-dialog").close());
-async function lookupBookings(more=false){
+async function lookupBookings(){
   const root=$("#booking-results");
-  if(!more){state.lookupEmail=$("#lookup-email").value.trim().toLowerCase();state.cursor=null;root.replaceChildren();}
-  const params=new URLSearchParams({email:state.lookupEmail,limit:"5"});
-  if(more && state.cursor)params.set("cursor",state.cursor);
-  showMessage("#lookup-message","Looking up appointments…","success");
-  try{
-    const result=await api("/bookings?"+params);
-    if(!result.bookings.length && !more)root.append(element("p","empty-hint","No bookings found for this email address."));
-    for(const booking of result.bookings)root.append(createBookingResult(booking));
-    state.cursor=result.next_cursor;
-    $("#load-more").hidden=!state.cursor;
-    showMessage("#lookup-message",result.bookings.length ? "" : (more ? "No more appointments." : ""),"success");
-  }catch(e){showMessage("#lookup-message",e.message);$("#load-more").hidden=true;}
+  root.replaceChildren();
+  const email=$("#lookup-email").value.trim().toLowerCase();
+  const reference=$("#lookup-reference").value.trim();
+  if (!reference || !email) {
+    showMessage("#lookup-message","Enter both your booking reference and email.");
+    return;
+  }
+  showMessage("#lookup-message","Looking up appointment…","success");
+  try {
+    const booking=await api("/bookings/"+encodeURIComponent(reference)+"?"+new URLSearchParams({email}));
+    root.append(createBookingResult(booking));
+    showMessage("#lookup-message","","success");
+  } catch (e) {
+    showMessage("#lookup-message",e.status===404?"No appointment matches that reference and email.":e.message);
+  }
 }
 function createBookingResult(booking){
   const card=element("article","result-card");
@@ -204,7 +178,7 @@ function createBookingResult(booking){
     cancel.addEventListener("click",async()=>{
       if(!window.confirm("Cancel this appointment? This will release the slot for someone else."))return;
       cancel.disabled=true;
-      try{await api("/bookings/"+encodeURIComponent(booking.id),{method:"DELETE"});showMessage("#lookup-message","Appointment cancelled.","success");await loadSlots();await lookupBookings();}
+      try{await api("/bookings/"+encodeURIComponent(booking.id)+"/cancel",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:$("#lookup-email").value.trim()})});showMessage("#lookup-message","Appointment cancelled.","success");await loadSlots();await lookupBookings();}
       catch(e){showMessage("#lookup-message",e.message);cancel.disabled=false;}
     });
     card.append(cancel);
@@ -212,9 +186,8 @@ function createBookingResult(booking){
   return card;
 }
 $("#lookup-form").addEventListener("submit",e=>{e.preventDefault();lookupBookings()});
-$("#load-more").addEventListener("click",()=>lookupBookings(true));
-document.addEventListener("visibilitychange",()=>{if(!document.hidden && state.key)loadSlots().catch(()=>{});});
-showAccess();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)loadSlots().catch(()=>{});});
+loadSlots().catch(()=>{showMessage("#book-message","Unable to load appointment availability. Please try again.");});
 
 // Lightweight sticky-nav transition. Passive scroll keeps interaction smooth.
 const siteHeader = document.querySelector(".site-header");
