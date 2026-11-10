@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from src.database import get_engine
 from src.slots_api import router as clinic_router
 from src.bookings_api import router as bookings_router
+from src.web_api import router as web_router
 
 app = FastAPI(
     title="Koya Clinic Booking API",
@@ -21,6 +22,7 @@ app = FastAPI(
 
 app.include_router(clinic_router)
 app.include_router(bookings_router)
+app.include_router(web_router)
 
 PUBLIC_DIR = Path(__file__).resolve().parent.parent / "public"
 
