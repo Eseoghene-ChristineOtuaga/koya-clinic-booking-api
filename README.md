@@ -108,4 +108,3 @@ scripts/verify_live.py       Live contract verification + cleanup
 .vscode/mcp.json             Playwright and Chrome DevTools MCP configuration
 ```
 
-Project notes: https://app.notion.com/p/40c11f4d5e0c8109ae96f780e02c452e
