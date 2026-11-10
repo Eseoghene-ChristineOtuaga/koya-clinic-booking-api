@@ -43,3 +43,22 @@ def test_frontend_assets():
     assert "text/css" in css.headers["content-type"]
     assert js.status_code == 200
     assert "javascript" in js.headers["content-type"]
+
+
+def test_openapi_documents_booking_creation_and_reset_warning():
+    paths = TestClient(app).get("/openapi.json").json()["paths"]
+    created = paths["/bookings"]["post"]
+    assert "201" in created["responses"]
+    assert "429" in created["responses"]
+    assert "Deletes existing bookings" in paths["/reset"]["post"]["description"]
+
+
+def test_public_website_has_no_api_key_dialog_and_expects_booking_reference():
+    client = TestClient(app)
+    markup = client.get("/").text
+    javascript = client.get("/app.js").text
+    assert 'id="access-dialog"' not in markup
+    assert 'id="lookup-reference"' in markup
+    assert "Find booking</button>" in markup
+    assert 'fetch("/web" + path' in javascript
+    assert "X-API-Key" not in javascript
