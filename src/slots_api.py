@@ -49,7 +49,17 @@ class ResetInput(BaseModel):
     slots: list[SlotInput]
 
 
-@router.post("/reset", dependencies=[Depends(require_api_key)])
+@router.post(
+    "/reset",
+    dependencies=[Depends(require_api_key)],
+    tags=["Administration"],
+    summary="Replace all clinic slots and clear booking history",
+    description="Assessment setup only. Deletes existing bookings, attempt history, idempotency records and slots, then creates the supplied slots. This operation cannot be undone.",
+    responses={
+        400: {"description": "Invalid or duplicate slot IDs"},
+        401: {"description": "Missing or incorrect X-API-Key"},
+    },
+)
 def reset(payload: ResetInput, session: Session = Depends(get_session)):
     ids = [slot.id for slot in payload.slots]
     if len(ids) != len(set(ids)):
@@ -70,7 +80,14 @@ def reset(payload: ResetInput, session: Session = Depends(get_session)):
     return {"slots": len(payload.slots)}
 
 
-@router.get("/slots", dependencies=[Depends(require_api_key)])
+@router.get(
+    "/slots",
+    dependencies=[Depends(require_api_key)],
+    tags=["Appointment slots"],
+    summary="List appointment slots and availability",
+    description="Returns slots in chronological order with availability computed from confirmed bookings. Optionally filter by provider name.",
+    responses={401: {"description": "Missing or incorrect X-API-Key"}},
+)
 def list_slots(provider: str | None = Query(default=None), session: Session = Depends(get_session)):
     booked = exists(select(Booking.id).where(
         Booking.slot_id == Slot.id, Booking.status == "confirmed"
