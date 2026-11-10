@@ -16,7 +16,7 @@ from src.web_api import router as web_router
 app = FastAPI(
     title="Koya Clinic Booking API",
     version="0.1.0",
-    description="Koya Cohort 4 assessment — database connection setup.",
+    description="Koya Clinic — A REST API for appointment scheduling, booking management, and availability.",
 )
 
 
