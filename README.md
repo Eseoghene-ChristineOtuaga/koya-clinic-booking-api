@@ -19,6 +19,15 @@ A full-stack clinic appointment booking system for the Koya Academy Cohort 4 ass
 
 **Implementation is not proof of correctness:** run the smoke tests and live verification suite below. The live test suite deliberately uses fictional details, and **never calls `/reset`**.
 
+
+## API surfaces and responses
+
+- **Assessment API (requires `X-API-Key`):** `GET /slots`, `POST /reset`, `POST /bookings`, `GET /bookings/{booking_id}`, `GET /bookings?email=...&limit=...&cursor=...`, and `DELETE /bookings/{booking_id}`.
+- **Patient-facing website API (no shared key prompt):** `GET /web/slots`, `POST /web/bookings`, `GET /web/bookings/{booking_id}?email=...`, and `POST /web/bookings/{booking_id}/cancel` with JSON body `{"email":"patient@example.com"}`. These `/web` routes are hidden from assessment Swagger documentation to keep the contract clear.
+- Booking creation returns `201` on success; errors include `400` invalid input, `401` missing/incorrect assessment key, `404` unknown slot/booking, `409` occupied slot or repeated cancellation, `422` reused idempotency key with changed request, and `429` excessive booking attempts (with `Retry-After`).
+- `POST /reset` **deletes all booking and rate-limit history, replaces every slot, and should only be used deliberately for assessment setup**. Cancelling a booking retains its history instead.
+- `GET /health` checks the application, whereas `GET /ready` checks PostgreSQL connectivity.
+
 ## Run locally (Windows PowerShell)
 
 Requirements: Python 3.11+ and Git.
@@ -71,9 +80,11 @@ python scripts/verify_live.py
 
 ## Manual browser checklist
 
-Open the live website at desktop and mobile widths. Enter the assessment API key into the demo access dialog. Select a doctor, an available date and time, and submit a **fictional** booking. Confirm the booking ID appears, then find the booking by email under **Manage booking** and cancel it. Confirm the slot is free again. Test the mobile hamburger menu and navbar transition from solid green at page top to frosted glass on scroll.
+Open the live website at desktop and mobile widths. No API key is needed on the patient-facing webpage. Select a clinician, an available date and time, and submit a **fictional** booking. Copy its booking reference; under **Manage booking**, enter both the reference and booking email, retrieve the record, and cancel it. Verify the slot becomes available again. Test the mobile hamburger menu and the header transition on scroll.
 
-The shared `X-API-Key` is an **assessment/demo** authentication mechanism, not secure patient login. The webpage never bundles or saves the key; the visitor enters it for the session. Do not use real patient information.
+The protected assessment routes (`/slots`, `/bookings`, and `/reset`) still require the `X-API-Key` request header. The patient-facing website instead calls separate `/web/*` routes without the shared API key. `/web/reset` does not exist. The key is never bundled into browser code.
+
+**Privacy limitations:** Patient booking lookup and cancellation on `/web/*` require a booking reference and matching email, but this is **not authenticated patient login**. A production clinic must use verified sessions or one-time links before accessing or changing personal bookings. Public booking creation is limited by normalized email (five attempts per rolling 60 seconds); this does not stop all automated abuse. Use fictional patient details only.
 
 ## Deployment and security
 
@@ -86,7 +97,8 @@ For demo/testing use fictional patients. Rotate any API key that has appeared in
 ```text
 src/index.py                 FastAPI ASGI entrypoint and static routes
 src/bookings_api.py          Booking, cancellation, pagination, rate limit
-src/slots_api.py             API-key validation, reset, slot listing
+src/slots_api.py             Protected API-key validation, reset, slot listing
+src/web_api.py               Keyless patient booking routes (reference+email lookup)
 src/models.py                PostgreSQL/SQLAlchemy models
 src/database.py              Database session and engine
 migrations/                  Alembic database migrations
