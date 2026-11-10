@@ -18,7 +18,7 @@ from src.database import get_session
 from src.models import Booking, BookingAttempt, IdempotencyKey, RateLimitLock, Slot
 from src.slots_api import require_api_key
 
-router = APIRouter(dependencies=[Depends(require_api_key)])
+router = APIRouter(dependencies=[Depends(require_api_key)], tags=["Bookings"])
 WINDOW_SECONDS = 60
 MAX_ATTEMPTS = 5
 
@@ -76,7 +76,20 @@ def replay_idempotent_response(status: int, saved: dict) -> JSONResponse:
     return JSONResponse(status_code=status, content=saved)
 
 
-@router.post("/bookings")
+@router.post(
+    "/bookings",
+    status_code=201,
+    summary="Create a booking",
+    description="Book a future available slot. Supports an optional Idempotency-Key header for safe retries.",
+    responses={
+        400: {"description": "Invalid booking data or a slot that has already started"},
+        401: {"description": "Missing or incorrect X-API-Key"},
+        404: {"description": "Slot not found"},
+        409: {"description": "Slot already booked"},
+        422: {"description": "Idempotency key reused with different booking details"},
+        429: {"description": "More than five attempts in 60 seconds; includes Retry-After"},
+    },
+)
 def create_booking(
     payload: BookingInput,
     idempotency_key: str | None = Header(default=None),
@@ -175,7 +188,11 @@ def create_booking(
     return JSONResponse(status_code=code, content=body, headers=response_headers)
 
 
-@router.get("/bookings")
+@router.get(
+    "/bookings",
+    summary="List bookings for an email",
+    description="Returns bookings in creation order, with 1–50 records per page and an opaque next_cursor.",
+)
 def list_bookings(
     email: str = Query(min_length=1),
     limit: int = Query(default=10, ge=1, le=50),
@@ -212,7 +229,7 @@ def list_bookings(
     return {"bookings": [booking_json(b) for b in page], "next_cursor": next_cursor}
 
 
-@router.get("/bookings/{booking_id}")
+@router.get("/bookings/{booking_id}", summary="Get a booking by ID")
 def get_booking(booking_id: str, session: Session = Depends(get_session)):
     booking = session.get(Booking, booking_id)
     if booking is None:
@@ -220,7 +237,7 @@ def get_booking(booking_id: str, session: Session = Depends(get_session)):
     return booking_json(booking)
 
 
-@router.delete("/bookings/{booking_id}")
+@router.delete("/bookings/{booking_id}", summary="Cancel a confirmed booking", description="Marks the booking cancelled, preserves history and frees the associated slot.")
 def cancel_booking(booking_id: str, session: Session = Depends(get_session)):
     with session.begin():
         booking = session.scalar(
