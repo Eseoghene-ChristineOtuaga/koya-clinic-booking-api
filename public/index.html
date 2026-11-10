@@ -97,12 +97,14 @@
           <h3>Find your booking</h3>
           
           <form id="lookup-form" class="lookup-form">
+            <label for="lookup-reference">Booking reference</label>
+            <input id="lookup-reference" type="text" placeholder="Paste your booking reference" required autocomplete="off">
             <label for="lookup-email">Email address</label>
             <div class="lookup-controls"><input id="lookup-email" type="email" autocomplete="email" placeholder="you@example.com" required><button class="dark-button" type="submit">Find bookings</button></div>
           </form>
           <p id="lookup-message" role="status" class="form-message" aria-live="polite"></p>
           <div id="booking-results" class="booking-results"></div>
-          <button id="load-more" class="text-button" type="button" hidden>Load more appointments <span aria-hidden="true">↓</span></button>
+          
         </div>
       </div>
     </section>
@@ -111,19 +113,6 @@
   </main>
 
   <footer class="site-footer"><div class="container footer-inner"><div><span class="footer-brand">koyaclinic.</span></div><div class="footer-links"><a href="#book">Book</a><a href="#manage">Manage</a><a href="/docs">API docs</a></div></div></footer>
-
-  <dialog id="access-dialog" aria-labelledby="access-title">
-    <form id="access-form" class="access-content">
-      <div class="access-symbol" aria-hidden="true">✳</div>
-      <h2 id="access-title">Welcome to Koya Clinic.</h2>
-      <p>Enter your assessment API key to continue.</p>
-      <label for="access-key">API access key</label>
-      <input id="access-key" type="password" required autocomplete="off" spellcheck="false" placeholder="Enter your access key">
-      <p id="access-error" class="form-message" role="alert"></p>
-      <button type="submit" class="primary-button">Continue to appointments <span aria-hidden="true">→</span></button>
-      <p class="access-small">Use sample patient details only.</p>
-    </form>
-  </dialog>
 
   <dialog id="confirm-dialog" aria-labelledby="confirm-title">
     <div class="confirm-content"><span class="confirm-check" aria-hidden="true">✓</span><p class="eyebrow eyebrow-dark">ALL SET</p><h2 id="confirm-title">You're booked.</h2><p id="confirmation-description"></p><div id="confirmation-details" class="confirm-details"></div><button id="confirmation-done" class="primary-button" type="button">Back to appointments <span aria-hidden="true">↗</span></button></div>
